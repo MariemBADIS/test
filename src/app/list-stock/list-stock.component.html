@@ -1,0 +1,14 @@
+<div class="Stock_principale">
+  <div class="stock" *ngFor="let item of stockBySymbole">
+    <h3>{{item.currentPrice}}</h3>
+    <p>{{item.dailyHighprice}}</p>
+    <p>dailylowPrice</p>
+    <p>daily low price</p>
+    <p>week high price</p>
+    <p>week low price</p>
+    <label class="switch">
+      <input type="checkbox" checked>
+      <span class="slider round">on</span>
+    </label>
+  </div>
+</div>
