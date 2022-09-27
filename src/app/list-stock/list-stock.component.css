@@ -3,20 +3,28 @@
   width: 100%;
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
+  flex-wrap: wrap;
   align-content: stretch;
-  flex-flow: wrap;
 }
 
-.stock {
+.block {
   border-radius: 15px;
   height: 280px;
   background: #2ecc71;
   width: 200px;
   margin-bottom: 20px;
+  margin-right: 20px;
   text-align: center;
+}
+
+.block.gray-style {
+  background: gray;
+}
+
+.block.stock-off {
+  background: red;
 }
 
 .switch {
@@ -70,7 +78,6 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-/* Rounded sliders */
 .slider.round {
   border-radius: 34px;
 }

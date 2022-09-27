@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, HostListener, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {StockBySymbole} from "../model/stock-by-symbole.model";
 
@@ -15,35 +15,17 @@ export class ListStockComponent implements OnInit {
   private startUrlWeekly = 'https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=';
   private endUrlWeekly = '&apikey=demo';
 
-  private listSymbole = ['IBM', 'TSCO.LON', 'SHOP.TRT', 'GPV.TRV'];
-
+  private listSymbole = ['IBM', 'TSCO.LON', 'IBM', 'TSCO.LON', 'IBM', 'TSCO.LON', 'IBM', 'TSCO.LON', 'IBM', 'TSCO.LON'];
 
   date$: any;
-  date1$: any;
-  dateDaily$: any;
   nameSubject: any;
-  nameSubject1: any;
-
   public isDesktop = true;
-
-
-  arr = [];
 
   stockBySymbole: StockBySymbole[] = [];
 
-/*  objectifStock: {
-    currentPrice: string;
-    dailyHighPrice: string
-  }[] = [];*/
-
-  listValueDaily = {
-    currentPrice: '',
-    dailyHighPrice: '',
-    dailylowprice: ''
-  };
-
-
-  public test = {};
+  public finStock = false;
+  public grayOut = false;
+  public offStock = false;
 
 
   constructor(private http: HttpClient) {
@@ -51,12 +33,12 @@ export class ListStockComponent implements OnInit {
 
   ngOnInit(): void {
     this.getListStock();
-    this.detectDevice();
   }
 
-  detectDevice() {
-    // Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) &&
-    if (window.innerWidth <= 767) {
+  @HostListener('window:resize', ['$event'])
+  detectDevice(event: any) {
+    let widthScreen = event.target.innerWidth;
+    if (widthScreen <= 767) {
       this.isDesktop = false;
     } else {
       this.isDesktop = true;
@@ -66,47 +48,55 @@ export class ListStockComponent implements OnInit {
 
   getListStock() {
     this.listSymbole.forEach(el => {
+      // call First API
       this.http.get<any>(this.startUrlDaily + el + this.endUrlDaily).subscribe(res => {
-        // console.log('res ', res);
+        const tmp = {
+          currentPrice: '',
+          dailyHighPrice: '',
+          dailylowPrice: '',
+          name: '',
+          weeklyHighprice: '',
+          weeklylowprice: ''
+        };
 
         this.nameSubject = Object.keys(res["Meta Data"]).map(e => res["Meta Data"][e])[1].slice(0, 4);
-        // console.log('nameSubject ', this.nameSubject);
-
         this.date$ = Object.keys(res["Time Series (Daily)"]);
-        // console.log('data tt 1', this.date$);
-
-        let dateSorted = this.date$.reverse();
-        // console.log('dateSorted tt 2', dateSorted);
-
         let dailyData = Object.keys(res["Time Series (Daily)"]).map(e => res["Time Series (Daily)"][e]);
-        // console.log('t3 ', dailyData);
 
-        this.listValueDaily.currentPrice = Object.keys(dailyData[dailyData.length - 1]).map(e => dailyData[dailyData.length - 1][e])[0];
-        this.listValueDaily.dailyHighPrice = Object.keys(dailyData[dailyData.length - 1]).map(e => dailyData[dailyData.length - 1][e])[1];
-        console.log('listt ', this.listValueDaily);
+        tmp.name = this.nameSubject;
+        tmp.currentPrice = Object.keys(dailyData[dailyData.length - 1]).map(e => dailyData[dailyData.length - 1][e])[0];
+        tmp.dailyHighPrice = Object.keys(dailyData[dailyData.length - 1]).map(e => dailyData[dailyData.length - 1][e])[1];
+        tmp.dailylowPrice = Object.keys(dailyData[dailyData.length - 1]).map(e => dailyData[dailyData.length - 1][e])[2];
 
-
-
-
+        // call second API
+        this.http.get<any>(this.startUrlWeekly + el + this.endUrlWeekly).subscribe(res1 => {
+          let weeklyData = Object.keys(res1["Weekly Time Series"]).map(e => res1["Weekly Time Series"][e]).slice(0, 52);
+          tmp.weeklyHighprice = Object.keys(weeklyData[weeklyData.length - 1]).map(e =>
+            weeklyData[weeklyData.length - 1][e]
+          )[0];
+          tmp.weeklylowprice = Object.keys(weeklyData[weeklyData.length - 1]).map(e =>
+            weeklyData[weeklyData.length - 1][e]
+          )[1];
+          this.stockBySymbole.push(tmp);
+        });
       });
-      this.stockBySymbole.push(this.listValueDaily);
-      console.log('this.arr ', this.stockBySymbole);
-
-/*
-      this.http.get<any>(this.startUrlWeekly + el + this.endUrlWeekly).subscribe(res => {
-              console.log('res ', res);
-
-              this.nameSubject1 = Object.keys(res["Meta Data"]).map(e => res["Meta Data"][e])[1].slice(0, 4);
-              // console.log('nameSubject ', this.nameSubject);
-
-              this.date1$ = Object.keys(res["Weekly Time Series"]);
-              // console.log('data tt 1', this.date$);
-
-            });*/
     });
 
 
+  }
 
+  /**
+   * Check
+   * @param event
+   * @param item
+   */
+  onToggle(event : any, item: any) {
+    let test = document.getElementById('ToggleswitchId') as HTMLInputElement;
+    if (test.checked) {
+      this.grayOut = true;
+    } else {
+      this.offStock = true;
+    }
   }
 
 }
